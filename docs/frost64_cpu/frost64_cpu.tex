@@ -87,9 +87,9 @@
 		%--------
 		\item There are 256 total ILARs, with 128 of them used for
 			interrupt service routines and 128 of them used for user code.
-		\item The two ILARs named \texttt{i0}, which are ILAR 0 and ILAR
-			128 within the ILAR file, have their fields always set to zero.
-			They cannot be changed.
+		\item The two ILARs named \texttt{i0}, which are ILAR number 0 and
+			ILAR number 128 within the ILAR file, have their fields always
+			set to zero.  They cannot be changed.
 		\item ILARs are 256 bytes long, and instructions are 32-bit.  This
 			means that one ILAR holds 256 / 4 = 64 instructions.
 		%--------
@@ -99,9 +99,9 @@
 		%--------
 		\item There are 256 total DLARs, with 128 used for interrupt
 			service routines and 128 of them used for user code.
-		\item The two DLARs named \texttt{dzero}, which are DLAR 0 and DLAR
-			128 within the DLAR file, have their fields always set to zero.
-			They cannot be changed.
+		\item The two DLARs named \texttt{dzero}, which are DLAR number 0
+			and DLAR number 128 within the DLAR file, have their fields
+			always set to zero.  They cannot be changed.
 		\item The user-mode DLAR named \texttt{dira}, which is DLAR 1
 			within the DLAR file, is treated specially, as its address
 			field is the interrupt return address for the \texttt{reti}
@@ -135,6 +135,12 @@
 		%--------
 		\end{itemize}
 	\item Interrupt Enable (\texttt{ie})
+		\begin{itemize}
+		%--------
+		\item This 1-bit register indicates whether or not an interrupt can
+			be serviced.
+		%--------
+		\end{itemize}
 	%--------
 	\end{itemize}
 
@@ -371,12 +377,13 @@
 	\subsection{Group 5 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{101o ooaa aaaa abbb  bbbb iiii ii00 0000}
+		\item Encoding:  \texttt{101o oooa aaaa aabb  bbbb biii iii0 0000}
 			\begin{itemize}
 			%--------
 			\item \texttt{o}:  opcode
-			\item \texttt{a}:  DLAR a
-			\item \texttt{b}:  LAR b (either a DLAR or an ILAR)
+			\item \texttt{a}:  DLAR a (mode-specific)
+			\item \texttt{b}:  LAR b (instruction-specific, either a DLAR
+				or an ILAR)
 			\item \texttt{i}:  6-bit immediate, \texttt{imm6}
 			%--------
 			\end{itemize}
@@ -387,9 +394,9 @@
 				\begin{itemize}
 				%--------
 				\item Name:  "get user-mode data"
-				\item For this instruction, the interrupts mode DLARs are
-					treated as vectors of 128-bit data, where each vector
-					element stores the following:
+				\item For this instruction, the destination, mode-specific
+					DLARs are treated as vectors of 128-bit data, where
+					each vector element stores the following:
 					\begin{itemize}
 					%--------
 					\item The full address (64-bit) of user-mode DLARs
@@ -401,17 +408,17 @@
 					%--------
 					\end{itemize}
 				\item Each 128-bit vector element corresponds to one
-					user mode DLAR's contents.
+					user-mode DLAR's contents.
 				\item This instruction grabs the full address and type tag
-					of user mode DLARs, starting with \texttt{dB}, and
+					of user-mode DLARs, starting with \texttt{dB}, and
 					including the following (consecutive) \texttt{imm6}
-					user mode DLARs, storing the 128-bit vector elements in
-					interrupts mode DLARs, starting with \texttt{dA} as the
-					base DLAR.  The base interrupts mode DLAR is followed
-					by consecutive DLARs if needed to store the user-mode
-					DLAR fields.
-				\item If the last interrupts mode DLAR is not completely
-					filled with user mode DLAR contents, its remaining
+					user-mode DLARs, storing the 128-bit vector elements in
+					(mode-specific) DLARs, starting with \texttt{dA} as the
+					base DLAR.  The base mode-specific DLAR is followed by
+					consecutive DLARs if needed to store the user-mode DLAR
+					fields.
+				\item If the last mode-specific DLAR is not completely
+					filled with user-mode DLAR contents, its remaining
 					128-bit vector elements will be filled with
 					\texttt{0x0}.
 				%--------
@@ -423,29 +430,30 @@
 				\item This instruction sort of does the reverse of the
 					\texttt{gudata} instruction, performing the equivalent
 					of load instructions, loading into user-mode DLARs
-					based upon the metadata stored in interrupts-mode
-					DLARs.  As such, this instruction can read from memory,
-					just like load instructions.
+					based upon the metadata stored in mode-specific DLARs.
+					As such, this instruction can read from memory, just
+					like load instructions.
 				%--------
 				\end{itemize}
+
 			\item \texttt{guinst dA, iB, imm6}
 				\begin{itemize}
 				%--------
 				\item Name:  "get user-mode instructions"
-				\item For this instruction, the interrupts mode DLARs are
-					treated as vectors of 64-bit data, where each vector
-					element stores the address field of a single user-mode
-					ILAR.
+				\item For this instruction, the destination, mode-specific
+					DLARs are treated as vectors of 64-bit data, where each
+					vector element stores the address field of a single
+					user-mode ILAR.
 				\item Each 64-bit vector element corresponds to one
 					user-mode ILAR's address.
 				\item This instruction grabs the full address of user-mode
 					ILARs, starting with \texttt{dB} and including the
 					following (consecutive) \texttt{imm6} user-mode ILARs,
-					storing the 64-bit vector elements in interrupts mode
+					storing the 64-bit vector elements in mode-specific
 					DLARs, starting with \texttt{dA} as the base DLAR.  The
-					base interrupts mode DLAR is followed by consecutive
+					base mode-specific DLAR is followed by consecutive
 					DLARs if needed to store the user-mode ILAR addresses.
-				\item If the last interrupts-mode DLAR is not completely
+				\item If the last mode-specific DLAR is not completely
 					filled with user-mode ILAR addresses, its remaining
 					64-bit vector elements will be filled with
 					\texttt{0x0}.
@@ -457,7 +465,7 @@
 				\item Name:  "restore user-mode instructions"
 				\item This instruction performs \texttt{imm6 + 1}
 					consecutive \texttt{fetch} operations, starting with
-					interrupts-mode \texttt{dA} as the base register that
+					(mode-specific) \texttt{dA} as the base register that
 					is the source of addresses to \texttt{fetch}
 					instructions from.  User-mode \texttt{iB} is the first
 					ILAR that instructions will be \texttt{fetch}ed into.
@@ -467,69 +475,273 @@
 				%--------
 				\end{itemize}
 
+			\item \texttt{gupc dA}
+				\begin{itemize}
+				%--------
+				\item Name:  "get user-mode pc"
+				\item This instruction grabs the user-mode program counter
+					value, encoded into a scalar value as
+					\begin{itemize}
+					%--------
+					\item \texttt{concat(ilar\_number, 
+						ilar\_scalar\_offset)},
+					%--------
+					\end{itemize}
+					and stores that value into DLAR \texttt{dA}.
+				\item Note:  the type tag of mode-specific DLAR \texttt{dA}
+					is respected during this operation.
+				\item Note:  This instruction is useful for implementing
+					user-mode jump tables that are (at least partially)
+					stored in a bunch of ILARs.
+				%--------
+				\end{itemize}
+			\item \texttt{rupc dA}
+				\begin{itemize}
+				%--------
+				\item Name:  "restore user-mode pc"
+				\item This instruction simply does the reverse operation of
+					the \texttt{gupc} instruction.
+				%--------
+				\end{itemize}
 
-			%\item \texttt{jzo.s dA, iB, imm6}
-			%	\begin{itemize}
-			%	%--------
-			%	\item Name:  "jump if zero, scalar"
-			%	\item If \texttt{dA}'s \textit{scalar} data is zero, this
-			%		instruction jumps to the instruction in ILAR
-			%		\texttt{iB} at index \texttt{imm6} .
-			%	%--------
-			%	\end{itemize}
-			%\item \texttt{jzo.v dA, iB, imm6}
-			%	\begin{itemize}
-			%	%--------
-			%	\item Name:  "jump if zero, vector"
-			%	\item If \texttt{dA}'s \textit{entire} (vector) data is
-			%		zero, this instruction jumps to the instruction in ILAR
-			%		\texttt{iB} at index \texttt{imm6}.
-			%	%--------
-			%	\end{itemize}
 
-			%\item \texttt{jnz.s dA, iB, imm6}
-			%	\begin{itemize}
-			%	%--------
-			%	\item Name:  "jump if non-zero, scalar"
-			%	\item If \texttt{dA}'s \textit{scalar} data is non-zero,
-			%		this instruction jumps to the instruction in ILAR
-			%		\texttt{iB} at index \texttt{imm6}.
-			%	%--------
-			%	\end{itemize}
-			%\item \texttt{jnz.v dA, iB, imm6}
-			%	\begin{itemize}
-			%	%--------
-			%	\item Name:  "jump if non-zero, vector"
-			%	\item If \texttt{dA}'s \textit{entire} (vector) data is
-			%		non-zero, this instruction jumps to the instruction in
-			%		ILAR \texttt{iB} at index \texttt{imm6}.
-			%	%--------
-			%	\end{itemize}
+			\item \texttt{gidata dA, dB, imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "get interrupts-mode data"
+				\item For this instruction, the destination, mode-specific
+					DLARs are treated as vectors of 128-bit data, where
+					each vector element stores the following:
+					\begin{itemize}
+					%--------
+					\item The full address (64-bit) of interrupts-mode
+						DLARs (starting with \texttt{dB}), stored in vector
+						element bit range \texttt{63..0}.
+					\item The type tag (3-bit) of interrupts-mode DLARs
+						(starting with \texttt{dB}), stored in vector
+						element bit range \texttt{66..64}
+					%--------
+					\end{itemize}
+				\item Each 128-bit vector element corresponds to one
+					interrupts-mode DLAR's contents.
+				\item This instruction grabs the full address and type tag
+					of interrupts-mode DLARs, starting with \texttt{dB},
+					and including the following (consecutive) \texttt{imm6}
+					interrupts-mode DLARs, storing the 128-bit vector
+					elements in (mode-specific) DLARs, starting with
+					\texttt{dA} as the base DLAR.  The base mode-specific
+					DLAR is followed by consecutive DLARs if needed to
+					store the interrupts-mode DLAR fields.
+				\item If the last mode-specific DLAR is not completely
+					filled with interrupts-mode DLAR contents, its
+					remaining 128-bit vector elements will be filled with
+					\texttt{0x0}.
+				%--------
+				\end{itemize}
+			\item \texttt{ridata dA, dB, imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "restore interrupts-mode data"
+				\item This instruction sort of does the reverse of the
+					\texttt{gidata} instruction, performing the equivalent
+					of load instructions, loading into interrupts-mode DLARs
+					based upon the metadata stored in mode-specific DLARs.
+					As such, this instruction can read from memory, just
+					like load instructions.
+				%--------
+				\end{itemize}
+
+			\item \texttt{giinst dA, iB, imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "get interrupts-mode instructions"
+				\item For this instruction, the destination, mode-specific
+					DLARs are treated as vectors of 64-bit data, where each
+					vector element stores the address field of a single
+					interrupts-mode ILAR.
+				\item Each 64-bit vector element corresponds to one
+					interrupts-mode ILAR's address.
+				\item This instruction grabs the full address of
+					interrupts-mode ILARs, starting with \texttt{dB} and
+					including the following (consecutive) \texttt{imm6}
+					interrupts-mode ILARs, storing the 64-bit vector
+					elements in mode-specific DLARs, starting with
+					\texttt{dA} as the base DLAR.  The base mode-specific
+					DLAR is followed by consecutive DLARs if needed to
+					store the interrupts-mode ILAR addresses.
+				\item If the last mode-specific DLAR is not completely
+					filled with interrupts-mode ILAR addresses, its
+					remaining 64-bit vector elements will be filled with
+					\texttt{0x0}.
+				%--------
+				\end{itemize}
+			\item \texttt{riinst dA, iB, imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "restore interrupts-mode instructions"
+				\item This instruction performs \texttt{imm6 + 1}
+					consecutive \texttt{fetch} operations, starting with
+					(mode-specific) \texttt{dA} as the base register that
+					is the source of addresses to \texttt{fetch}
+					instructions from.  User-mode \texttt{iB} is the first
+					ILAR that instructions will be \texttt{fetch}ed into.
+				\item Basically, this instruction takes the results from
+					a \texttt{giinst} instruction and re-\texttt{fetch}es
+					the instructions back into interrupts-mode ILARs.
+				%--------
+				\end{itemize}
+
+			\item \texttt{gipc dA}
+				\begin{itemize}
+				%--------
+				\item Name:  "get interrupts-mode pc"
+				\item This instruction grabs the interrupts-mode program
+					counter value, encoded into a scalar value as
+					\begin{itemize}
+					%--------
+					\item \texttt{concat(ilar\_number, 
+						ilar\_scalar\_offset)},
+					%--------
+					\end{itemize}
+					and stores that value into DLAR \texttt{dA}.
+				\item Note:  the type tag of mode-specific DLAR \texttt{dA}
+					is respected during this operation.
+				\item Note:  This instruction is useful for implementing
+					interrupts-mode jump tables that are (at least
+					partially) stored in a bunch of ILARs.
+				%--------
+				\end{itemize}
+			\item \texttt{ripc dA}
+				\begin{itemize}
+				%--------
+				\item Name:  "restore interrupts-mode pc"
+				\item This instruction simply does the reverse operation of
+					the \texttt{gipc} instruction.
+				%--------
+				\end{itemize}
+
+
+			\item \texttt{ei}
+				\begin{itemize}
+				%--------
+				\item This instruction sets the interrupt enable register,
+					\texttt{ie}, to \texttt{0b1}, which enables interrupts.
+				%--------
+				\end{itemize}
+			\item \texttt{di}
+				\begin{itemize}
+				%--------
+				\item This instruction sets the interrupt enable register,
+					\texttt{ie}, to \texttt{0b0}, which disables
+					interrupts.
+				%--------
+				\end{itemize}
+
+			\item \texttt{reti dA}
+				\begin{itemize}
+				%--------
+				\item Name:  "return from interrupt"
+				\item This instruction does the following:
+					\begin{itemize}
+					%--------
+					\item Sets \texttt{ie} to \texttt{0b1}, enabling
+						interrupts.
+					\item Switches to user-mode from interrupts-mode.
+					\item Sets the user-mode \texttt{pc} to the scalar data
+						of user-mode DLAR \texttt{dA}
+					%--------
+					\end{itemize}
+				%--------
+				\end{itemize}
+
+			\item Reserved for future expansion
 			%--------
 			\end{enumerate}
 		%--------
 		\end{itemize}
 
-	\subsection{Group 7 Instructions}
+	\subsection{Group 6 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{111o o000 0000 0000  0000 0000 0000 0000}
+		\item Encoding:  \texttt{110o ooaa aaaa abbb  bbbb iiii iijj jjjj}
 			\begin{itemize}
 			%--------
 			\item \texttt{o}:  opcode
+			\item \texttt{a}:  DLAR a, \texttt{dA}
+			\item \texttt{b}:  ILAR b (\texttt{iB}), or DLAR b
+				(\texttt{dB})
+			\item \texttt{i}:  \texttt{i\_imm6}, field \texttt{i} 6-bit
+				unsigned immediate
+			\item \texttt{j}:  \texttt{j\_imm6}, field \texttt{j} 6-bit
+				unsigned immediate
 			%--------
 			\end{itemize}
 		\item Instruction List:
-			\begin{itemize}
-			%--------
-			\item \texttt{ei}
+			\item \texttt{jzo.s dA, iB, i\_imm6}
 				\begin{itemize}
 				%--------
-				\item Enable interrupts
+				\item Name:  "jump if zero, scalar"
+				\item If \texttt{dA}'s \textit{scalar} data is zero, this
+					instruction jumps to the instruction in ILAR
+					\texttt{iB} at index \texttt{i\_imm6}.
 				%--------
 				\end{itemize}
-			%--------
-			\end{itemize}
+			\item \texttt{jzo.v dA, iB, i\_imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "jump if zero, vector"
+				\item If \texttt{dA}'s \textit{entire} (vector) data is
+					zero, this instruction jumps to the instruction in ILAR
+					\texttt{iB} at index \texttt{i\_imm6}.
+				%--------
+				\end{itemize}
+
+			\item \texttt{jnz.s dA, iB, i\_imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "jump if non-zero, scalar"
+				\item If \texttt{dA}'s \textit{scalar} data is non-zero,
+					this instruction jumps to the instruction in ILAR
+					\texttt{iB} at index \texttt{i\_imm6}.
+				%--------
+				\end{itemize}
+			\item \texttt{jnz.v dA, iB, i\_imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "jump if non-zero, vector"
+				\item If \texttt{dA}'s \textit{entire} (vector) data is
+					non-zero, this instruction jumps to the instruction in
+					ILAR \texttt{iB} at index \texttt{i\_imm6}.
+				%--------
+				\end{itemize}
+
+			\item \texttt{sel.s dA, iB, i\_imm6, j\_imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "select, scalar"
+				\item If \texttt{dA}'s scalar data is non-zero, jump to the
+					instruction at ILAR \texttt{iB}, offset
+					\texttt{i\_imm6}.  Otherwise, if \texttt{dA}'s scalar
+					data is zero, jump to the instruction at ILAR
+					\texttt{iB}, offset \texttt{j\_imm6}.
+				%--------
+				\end{itemize}
+
+			\item \texttt{sel.v dA, iB, i\_imm6, j\_imm6}
+				\begin{itemize}
+				%--------
+				\item Name:  "select, vector"
+				\item If \texttt{dA}'s \textit{entire} (vector) data is
+					non-zero, jump to the instruction at ILAR \texttt{iB},
+					offset \texttt{i\_imm6}.  Otherwise, if \texttt{dA}'s
+					\textit{entire} (vector) data is zero, jump to the
+					instruction at ILAR \texttt{iB}, offset
+					\texttt{j\_imm6}.
+				%--------
+				\end{itemize}
+
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
 		%--------
 		\end{itemize}
 
