@@ -343,10 +343,10 @@
 			\item \texttt{a}:  ILAR a (base ILAR)
 			\item \texttt{b}:  DLAR b
 			\item \texttt{c}:  ILAR c
-			\item \texttt{i}:  Signed 4-bit immediate
-			\item \texttt{j}:  Unsigned 4-bit immediate.  How many
-				additional, consecutive ILARs, starting with \texttt{iA},
-				will be \texttt{fetch}ed into.
+			\item \texttt{i}:  Signed 4-bit immediate (\texttt{i\_simm4})
+			\item \texttt{j}:  Unsigned 4-bit immediate (\texttt{j\_imm4}).
+				How many additional, consecutive ILARs, starting with
+				\texttt{iA}, will be \texttt{fetch}ed into.
 				\begin{itemize}
 				%--------
 				\item Note:  The destination ILAR number will wrap around
@@ -361,14 +361,14 @@
 			%--------
 			\item The one instruction in this group of instructions,
 				\texttt{fetch}, computes the starting address, via the
-				following equation:  \texttt{u64(dB.data) + iC.addr
-					+ s64(simm4)}
+				following equation:  \texttt{u64(dB.scalar\_data) + iC.addr
+					+ s64(i\_simm4)}
 			%--------
 			\end{itemize}
 		\item Instruction List:
 			\begin{itemize}
 			%--------
-			\item \texttt{fetch iA, dB, iC, simm4}
+			\item \texttt{fetch iA, dB, iC, i\_simm4, j\_imm4}
 			%--------
 			\end{itemize}
 		%--------
@@ -377,7 +377,63 @@
 	\subsection{Group 5 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{101o oooa aaaa aabb  bbbb biii iii0 0000}
+		\item Encoding:  \texttt{101o aaaa aaab bbbb  bbii iiii iiii jjjj}
+			\begin{itemize}
+			%--------
+			\item \texttt{o}:  Opcode
+			\item \texttt{a}:  ILAR a (base ILAR)
+			\item \texttt{b}:  DLAR b or ILAR c
+			\item \texttt{i}:  Signed 10-bit immediate (\texttt{i\_simm10})
+			\item \texttt{j}:  Unsigned 4-bit immediate (\texttt{j\_imm4}).
+				How many additional, consecutive ILARs, starting with
+				\texttt{iA}, will be \texttt{fetch}ed into.
+				\begin{itemize}
+				%--------
+				\item Note:  The destination ILAR number will wrap around
+					to \texttt{i0} if incrementing from \texttt{i128} to
+					the next ILAR, i.e. a 7-bit counter is used.
+				%--------
+				\end{itemize}
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{fetchd iA, dB, i\_simm10, j\_imm4}
+				\begin{itemize}
+				%--------
+				\item This instruction acts almost the same as a
+					\texttt{fetch} instruction, but computes the starting
+					address to fetch from via the following formula:
+					\begin{itemize}
+					%--------
+					\item \texttt{u64(dB.scalar\_data) + s64(i\_simm10)}
+					%--------
+					\end{itemize}
+				%--------
+				\end{itemize}
+			\item \texttt{fetcha iA, iB, i\_simm10, j\_imm4}
+				\begin{itemize}
+				%--------
+				\item This instruction acts almost the same as a
+					\texttt{fetch} instruction, but computes the starting
+					address to fetch from via the following formula:
+					\begin{itemize}
+					%--------
+					\item \texttt{iB.addr + s64(i\_simm10)}
+					%--------
+					\end{itemize}
+				%--------
+				\end{itemize}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 6 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{110o oooa aaaa aabb  bbbb biii iii0 0000}
 			\begin{itemize}
 			%--------
 			\item \texttt{o}:  opcode
@@ -660,10 +716,10 @@
 		%--------
 		\end{itemize}
 
-	\subsection{Group 6 Instructions}
+	\subsection{Group 7 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{110o ooaa aaaa abbb  bbbb iiii iijj jjjj}
+		\item Encoding:  \texttt{111o ooaa aaaa abbb  bbbb iiii iijj jjjj}
 			\begin{itemize}
 			%--------
 			\item \texttt{o}:  opcode
