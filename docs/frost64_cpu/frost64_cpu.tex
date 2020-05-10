@@ -148,9 +148,12 @@
 	\subsection{Group 0 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{000v ooof fffa aaaa  aabb bbbb bccc cccc}
+		\item Encoding:  \texttt{000a aaaa aabb bbbb  bccc cccc vooo ffff}
 			\begin{itemize}
 			%--------
+			\item \texttt{a}:  DLAR a
+			\item \texttt{b}:  DLAR b
+			\item \texttt{c}:  DLAR c
 			\item \texttt{v}:
 				\begin{itemize}
 				%--------
@@ -160,9 +163,6 @@
 				\end{itemize}
 			\item \texttt{o}:  opcode
 			\item \texttt{f}:  functional unit number f
-			\item \texttt{a}:  DLAR a
-			\item \texttt{b}:  DLAR b
-			\item \texttt{c}:  DLAR c
 			%--------
 			\end{itemize}
 		\item Instruction List:
@@ -192,9 +192,13 @@
 	\subsection{Group 1 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{001v ooof fffa aaaa  aabb bbbb bccc cccc}
+		\item Encoding:  \texttt{001a aaaa aabb bbbb  bccc cccc vooo ffff}
 			\begin{itemize}
 			%--------
+			\item \texttt{a}:  DLAR a
+			\item \texttt{b}:  DLAR b
+			\item \texttt{c}:  DLAR c
+			\item \texttt{o}:  opcode
 			\item \texttt{v}:
 				\begin{itemize}
 				%--------
@@ -202,11 +206,7 @@
 				\item when \texttt{1}:  vector operation
 				%--------
 				\end{itemize}
-			\item \texttt{o}:  opcode
 			\item \texttt{f}:  functional unit number f
-			\item \texttt{a}:  DLAR a
-			\item \texttt{b}:  DLAR b
-			\item \texttt{c}:  DLAR c
 			%--------
 			\end{itemize}
 		\item Instruction List:
@@ -227,13 +227,13 @@
 					\texttt{dB} is signed.
 				%--------
 				\end{itemize}
-			\item Reserved
-			\item Reserved
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
 
-			\item Reserved
-			\item Reserved
-			\item Reserved
-			\item Reserved
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
 			%--------
 			\end{enumerate}
 		%--------
@@ -242,13 +242,13 @@
 	\subsection{Group 2 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{010o oooa aaaa aabb  bbbb biii iiii iiii}
+		\item Encoding:  \texttt{010a aaaa aabb bbbb  biii iiii iiii oooo}
 			\begin{itemize}
 			%--------
-			\item \texttt{o}:  opcode
 			\item \texttt{a}:  DLAR a
 			\item \texttt{b}:  DLAR b
 			\item \texttt{i}:  Signed 11-bit immediate
+			\item \texttt{o}:  opcode
 			%--------
 			\end{itemize}
 		\item Notes:
@@ -289,14 +289,14 @@
 	\subsection{Group 3 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{011o oooa aaaa aabb  bbbb bccc cccc iiii}
+		\item Encoding:  \texttt{011a aaaa aabb bbbb  bccc cccc iiii oooo}
 			\begin{itemize}
 			%--------
-			\item \texttt{o}:  opcode
 			\item \texttt{a}:  DLAR a
 			\item \texttt{b}:  DLAR b
 			\item \texttt{b}:  DLAR c
 			\item \texttt{i}:  Signed 4-bit immediate
+			\item \texttt{o}:  opcode
 			%--------
 			\end{itemize}
 		\item Notes:
@@ -377,10 +377,9 @@
 	\subsection{Group 5 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{101o aaaa aaab bbbb  bbii iiii iiii jjjj}
+		\item Encoding:  \texttt{101a aaaa aabb bbbb  biii iiii iiij jjjo}
 			\begin{itemize}
 			%--------
-			\item \texttt{o}:  Opcode
 			\item \texttt{a}:  ILAR a (base ILAR)
 			\item \texttt{b}:  DLAR b or ILAR c
 			\item \texttt{i}:  Signed 10-bit immediate (\texttt{i\_simm10})
@@ -394,6 +393,7 @@
 					the next ILAR, i.e. a 7-bit counter is used.
 				%--------
 				\end{itemize}
+			\item \texttt{o}:  Opcode
 			%--------
 			\end{itemize}
 		\item Instruction List:
@@ -433,14 +433,22 @@
 	\subsection{Group 6 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{110o oooa aaaa aabb  bbbb biii iii0 0000}
+		\item Encoding:  \texttt{110a aaaa aabb bbbb  biii iiio oooo ffff}
 			\begin{itemize}
 			%--------
-			\item \texttt{o}:  opcode
 			\item \texttt{a}:  DLAR a (mode-specific)
 			\item \texttt{b}:  LAR b (instruction-specific, either a DLAR
 				or an ILAR)
-			\item \texttt{i}:  6-bit immediate, \texttt{imm6}
+			\item \texttt{i}:
+				One of the following, depending on the instruction:
+				\begin{itemize}
+				%--------
+				\item 6-bit immediate, \texttt{imm6}
+				\item 6-bit signed immediate, \texttt{simm6}
+				%--------
+				\end{itemize}
+			\item \texttt{o}:  opcode
+			\item \texttt{f}:  Functional unit number
 			%--------
 			\end{itemize}
 		\item Instruction List:
@@ -710,7 +718,27 @@
 				%--------
 				\end{itemize}
 
-			\item Reserved for future expansion
+			\item Reserved for future expansion.
+
+			\item \texttt{addi.s fF, dA, dB, imm6}
+			\item \texttt{subi.s fF, dA, dB, imm6}
+			\item \texttt{slti.s fF, dA, dB, imm6}
+			\item \texttt{muli.s fF, dA, dB, imm6}
+
+			\item \texttt{divi.s fF, dA, dB, imm6}
+			\item \texttt{andi.s fF, dA, dB, imm6}
+			\item \texttt{orri.s fF, dA, dB, imm6}
+			\item \texttt{xori.s fF, dA, dB, imm6}
+
+			\item \texttt{shli.s fF, dA, dB, imm6}
+			\item \texttt{shri.s fF, dA, dB, imm6}
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
+
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
+			\item Reserved for future expansion.
 			%--------
 			\end{enumerate}
 		%--------
@@ -719,10 +747,9 @@
 	\subsection{Group 7 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{111o ooaa aaaa abbb  bbbb iiii iijj jjjj}
+		\item Encoding:  \texttt{111a aaaa aabb bbbb  biii iiij jjjj jooo}
 			\begin{itemize}
 			%--------
-			\item \texttt{o}:  opcode
 			\item \texttt{a}:  DLAR a, \texttt{dA}
 			\item \texttt{b}:  ILAR b (\texttt{iB}), or DLAR b
 				(\texttt{dB})
@@ -730,6 +757,7 @@
 				unsigned immediate
 			\item \texttt{j}:  \texttt{j\_imm6}, field \texttt{j} 6-bit
 				unsigned immediate
+			\item \texttt{o}:  opcode
 			%--------
 			\end{itemize}
 		\item Instruction List:
