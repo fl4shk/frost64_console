@@ -144,6 +144,31 @@
 	%--------
 	\end{itemize}
 
+\newpage
+\section{Encoding Functional Unit Numbers Into Arithmetic/Logic
+	Instructions}
+
+	Here is an explanation of what encoding functional unit numbers into
+	arithmetic/logic instructions means to the CPU.
+
+	"This instruction, which takes multiple cycles to complete, uses this
+	functional unit.  You may execute later instructions that don't depend
+	on the results that this functional unit will produce at the same time
+	as this instruction.  If a later instruction needs the results of this
+	functional unit, please stall, as necessary, until the functional unit
+	has produced its results."
+
+	In other words, said instructions start an asynchronous use of the
+	functional unit, stalling only if necessary, i.e. when a needed result
+	isn't computed yet.
+
+	Different implementations of the CPU may have a different number of
+	functional units, with the machine still executing instructions
+	correctly, even if it has fewer functional units than what was encoded
+	into the instruction.  Four bits in relevant instructions are used to
+	indicate which functional unit to use for said instructions.
+
+\newpage
 \section{Instructions (CPU's perspective)}
 	\subsection{Group 0 Instructions}
 		\begin{itemize}
