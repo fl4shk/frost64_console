@@ -136,11 +136,11 @@
 		\item Instruction List:
 			\begin{enumerate}
 			%--------
-			\item \texttt{cpyi0 rA, imm8}
+			\item \texttt{cpyi rA, imm8}
 				\begin{itemize}
 				%--------
-				\item This instruction sets byte 0 (lsb) of \texttt{rA} to
-					the immediate value.
+				\item This instruction sets \texttt{rA} to the immediate
+					value.
 				%--------
 				\end{itemize}
 			\item \texttt{cpyi1 rA, imm8}
@@ -174,11 +174,11 @@
 			%		final 32-bit value in \texttt{rA}
 			%	%--------
 			%	\end{itemize}
-			\item \texttt{addsi rA, simm8}
+			\item \texttt{addsi pc, rA, simm8}
 				\begin{itemize}
 				%--------
-				\item This instruction writes \texttt{rA \^ to\_s32(simm8)}
-					into \texttt{rA}
+				\item This instruction writes \texttt{rA + to\_s32(simm8)}
+					into \texttt{pc}
 				%--------
 				\end{itemize}
 			\item \texttt{addsi rA, pc, simm8}
@@ -189,7 +189,7 @@
 				%--------
 				\end{itemize}
 
-			\item \texttt{bzo rA, simm8}
+			\item \texttt{bz rA, simm8}
 				\begin{itemize}
 				%--------
 				\item Relative branch if \texttt{rA} is \textit{zero}.
@@ -290,15 +290,15 @@
 		\item Instruction List:
 			\begin{enumerate}
 			%--------
-			\item \texttt{ldb rA, rB}
-			\item \texttt{ldsb rA, rB}
-			\item \texttt{stb rA, rB}
-			\item \texttt{ldh rA, rB}
+			\item \texttt{ldb rA, [rB]}
+			\item \texttt{ldsb rA, [rB]}
+			\item \texttt{stb rA, [rB]}
+			\item \texttt{ldh rA, [rB]}
 
-			\item \texttt{ldsh rA, rB}
-			\item \texttt{sth rA, rB}
-			\item \texttt{ldr rA, rB}
-			\item \texttt{str rA, rB}
+			\item \texttt{ldsh rA, [rB]}
+			\item \texttt{sth rA, [rB]}
+			\item \textit{ldr sA, [rB, sp]}
+			\item \texttt{str sA, [rB, sp]}
 
 			\item \texttt{cpy rA, rB}
 				\begin{itemize}
@@ -336,6 +336,7 @@
 				%--------
 				\end{itemize}
 
+
 			\item \textit{zeb rA, rB}
 				\begin{itemize}
 				%--------
@@ -364,6 +365,92 @@
 					the result into \texttt{rA}.
 				%--------
 				\end{itemize}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 4 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{1011 iiii iiii iiii}
+			\begin{itemize}
+			%--------
+			\item \texttt{i}:  12-bit signed immediate, \texttt{simm12}
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{bl simm12}
+				\begin{itemize}
+				%--------
+				\item This instruction sets \texttt{lr} to \texttt{pc + 2}
+					and jumps to the address
+					\texttt{pc + (to\_s32(simm12) << 1)}.
+				%--------
+				\end{itemize}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 5 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{1100 aaaa bbbb cccc}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  general-purpose register \texttt{rA}
+			\item \texttt{b}:  general-purpose register \texttt{rB}
+			\item \texttt{c}:  general-purpose register \texttt{rC}
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{ldr rA, [rB, rC]}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 6 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{1101 aaaa bbbb cccc}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  general-purpose register \texttt{rA}
+			\item \texttt{b}:  general-purpose register \texttt{rB}
+			\item \texttt{c}:  general-purpose register \texttt{rC}
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{str rA, [rB, rC]}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 7 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{1110 aaaa bbbb cccc}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  general-purpose register \texttt{rA}
+			\item \texttt{b}:  general-purpose register \texttt{rB}
+			\item \texttt{c}:  general-purpose register \texttt{rC}
+			%--------
+			\end{itemize}
+
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{add rA, rB, rC}
 			%--------
 			\end{enumerate}
 		%--------
