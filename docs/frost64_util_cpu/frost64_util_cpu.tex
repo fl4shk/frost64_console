@@ -177,8 +177,8 @@
 			\item \texttt{addsi pc, rA, simm8}
 				\begin{itemize}
 				%--------
-				\item This instruction writes \texttt{rA + to\_s32(simm8)}
-					into \texttt{pc}
+				\item This instruction writes
+					\texttt{(rA + to\_s32(simm8)) << 1} into \texttt{pc}
 				%--------
 				\end{itemize}
 			\item \texttt{addsi rA, pc, simm8}
