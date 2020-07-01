@@ -109,6 +109,12 @@
 		\begin{itemize}
 		%--------
 		\item \texttt{pc}: index \texttt{0x0}, program counter
+			\begin{itemize}
+			%--------
+			\item Note that writes into this register forcibly have the LSB
+				set to \texttt{0b0}.
+			%--------
+			\end{itemize}
 		\item \texttt{ira}: index \texttt{0x1}, interrupt return address
 		\item \texttt{ida}: index \texttt{0x2}, interrupt destination
 			address
@@ -174,11 +180,11 @@
 			%		final 32-bit value in \texttt{rA}
 			%	%--------
 			%	\end{itemize}
-			\item \texttt{addsi pc, rA, simm8}
+			\item \texttt{addsi rA, simm8}
 				\begin{itemize}
 				%--------
-				\item This instruction writes
-					\texttt{(rA + to\_s32(simm8)) << 1} into \texttt{pc}
+				\item This instruction writes \texttt{rA + to\_s32(simm8)}
+					into \texttt{rA}.
 				%--------
 				\end{itemize}
 			\item \texttt{addsi rA, pc, simm8}
@@ -193,12 +199,16 @@
 				\begin{itemize}
 				%--------
 				\item Relative branch if \texttt{rA} is \textit{zero}.
+				\item Note that the branch offset is treated as
+					\texttt{simm8 << 1}.
 				%--------
 				\end{itemize}
 			\item \texttt{bnz rA, simm8}
 				\begin{itemize}
 				%--------
 				\item Relative branch if \texttt{rA} is \textit{non-zero}.
+				\item Note that the branch offset is treated as
+					\texttt{simm8 << 1}.
 				%--------
 				\end{itemize}
 			%--------
