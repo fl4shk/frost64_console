@@ -149,37 +149,13 @@
 					value.
 				%--------
 				\end{itemize}
-			\item \texttt{cpyi1 rA, imm8}
+			\item \texttt{shiftin rA, imm8}
 				\begin{itemize}
 				%--------
-				\item This instruction sets byte 1 of \texttt{rA} to the
-					immediate value.
+				\item This instruction sets \texttt{rA} to
+					\texttt{(rA << 8) | imm8}
 				%--------
 				\end{itemize}
-			\item \texttt{cpyi2 rA, imm8}
-				\begin{itemize}
-				%--------
-				\item This instruction sets byte 2 of \texttt{rA} to the
-					immediate value.
-				%--------
-				\end{itemize}
-			\item \texttt{cpyi3 rA, imm8}
-				\begin{itemize}
-				%--------
-				\item This instruction sets byte 3 (msb) of \texttt{rA} to
-					the immediate value.
-				%--------
-				\end{itemize}
-
-			%\item \texttt{cpyis rA, imm8}
-			%	\begin{itemize}
-			%	%--------
-			%	\item This instruction sets byte 1 of \texttt{rA} to the
-			%		immediate value, then sign extends the low two bytes of
-			%		\texttt{rA}, as a 16-bit value, to 32-bit, storing the
-			%		final 32-bit value in \texttt{rA}
-			%	%--------
-			%	\end{itemize}
 			\item \texttt{addsi rA, simm8}
 				\begin{itemize}
 				%--------
@@ -187,6 +163,9 @@
 					into \texttt{rA}.
 				%--------
 				\end{itemize}
+			\item \texttt{sltui rA, simm8}
+
+			\item \texttt{sltsi rA, simm8}
 			\item \texttt{addsi rA, pc, simm8}
 				\begin{itemize}
 				%--------
@@ -232,14 +211,14 @@
 		\item Instruction List:
 			\begin{enumerate}
 			%--------
-			\item \texttt{sltui rA, imm5}
-			\item \texttt{sltsi rA, simm5}
 			\item \texttt{xorsi rA, simm5}
 			\item \texttt{xorsi sA, simm5}
-
 			\item \texttt{lsli rA, imm5}
 			\item \texttt{lsri rA, imm5}
+
 			\item \texttt{asri rA, imm5}
+			\item \textit{Reserved for future expansion.}
+			\item \textit{Reserved for future expansion.}
 			\item \textit{Reserved for future expansion.}
 			%--------
 			\end{enumerate}
