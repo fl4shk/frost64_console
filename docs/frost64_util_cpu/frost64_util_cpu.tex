@@ -82,15 +82,292 @@
 	%--------
 	\item The main width of the processor is 32-bit, contrary to what the
 		name of the processor suggests.  Addresses are 32-bit. 
-	\item General Purpose Registers
+	\item General Purpose Registers (32-bit)
+		There are sixteen general-purpose registers:
 		\begin{itemize}
 		%--------
-		\item \texttt{u0}
-		\item \texttt{u1)
+		\item \texttt{zero}: index \texttt{0x0}, always zero
+		\item \texttt{u0}: index \texttt{0x1}
+		\item \texttt{u1}: index \texttt{0x2}
+		\item \texttt{u2}: index \texttt{0x3}
+		\item \texttt{u3}: index \texttt{0x4}
+		\item \texttt{u4}: index \texttt{0x5}
+		\item \texttt{u5}: index \texttt{0x6}
+		\item \texttt{u6}: index \texttt{0x7}
+		\item \texttt{u7}: index \texttt{0x8}
+		\item \texttt{u8}: index \texttt{0x9}
+		\item \texttt{u9}: index \texttt{0xa}
+		\item \texttt{u10}: index \texttt{0xb}
+		\item \texttt{u11}: index \texttt{0xc}
+		\item \texttt{lr}: index \texttt{0xd}, link register
+		\item \texttt{fp}: index \texttt{0xe}, frame pointer
+		\item \texttt{sp}: index \texttt{0xf}, stack pointer
+		%--------
+		\end{itemize}
+
+		There are a few special-purpose registers:
+		\begin{itemize}
+		%--------
+		\item \texttt{pc}: index \texttt{0x0}, program counter
+		\item \texttt{ira}: index \texttt{0x1}, interrupt return address
+		\item \texttt{ida}: index \texttt{0x2}, interrupt destination
+			address
+		\item \texttt{inp}: index \texttt{0x3}, interrupt pin (which
+			interrupt pin was asserted)
+		\item \texttt{ie}: index \texttt{0x4}, interrupt enable
 		%--------
 		\end{itemize}
 	%--------
 	\end{itemize}
+
+\section{Instructions}
+	\subsection{Group 0 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{0ooo aaaa iiii iiii}
+			\begin{itemize}
+			%--------
+			\item \texttt{o}:  opcode
+			\item \texttt{a}:  general-purpose register \texttt{rA}
+			\item \texttt{i}:  8-bit unsigned immediate \texttt{imm8} or
+				8-bit signed immediate \texttt{simm8}
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{cpyi0 rA, imm8}
+				\begin{itemize}
+				%--------
+				\item This instruction sets byte 0 (lsb) of \texttt{rA} to
+					the immediate value.
+				%--------
+				\end{itemize}
+			\item \texttt{cpyi1 rA, imm8}
+				\begin{itemize}
+				%--------
+				\item This instruction sets byte 1 of \texttt{rA} to the
+					immediate value.
+				%--------
+				\end{itemize}
+			\item \texttt{cpyi2 rA, imm8}
+				\begin{itemize}
+				%--------
+				\item This instruction sets byte 2 of \texttt{rA} to the
+					immediate value.
+				%--------
+				\end{itemize}
+			\item \texttt{cpyi3 rA, imm8}
+				\begin{itemize}
+				%--------
+				\item This instruction sets byte 3 (msb) of \texttt{rA} to
+					the immediate value.
+				%--------
+				\end{itemize}
+
+			%\item \texttt{cpyis rA, imm8}
+			%	\begin{itemize}
+			%	%--------
+			%	\item This instruction sets byte 1 of \texttt{rA} to the
+			%		immediate value, then sign extends the low two bytes of
+			%		\texttt{rA}, as a 16-bit value, to 32-bit, storing the
+			%		final 32-bit value in \texttt{rA}
+			%	%--------
+			%	\end{itemize}
+			\item \texttt{addsi rA, simm8}
+				\begin{itemize}
+				%--------
+				\item This instruction writes \texttt{rA \^ to\_s32(simm8)}
+					into \texttt{rA}
+				%--------
+				\end{itemize}
+			\item \texttt{addsi rA, pc, simm8}
+				\begin{itemize}
+				%--------
+				\item This instruction writes \texttt{pc + to\_s32(imm8)}
+					into \texttt{rA}
+				%--------
+				\end{itemize}
+
+			\item \texttt{bzo rA, simm8}
+				\begin{itemize}
+				%--------
+				\item Relative branch if \texttt{rA} is \textit{zero}.
+				%--------
+				\end{itemize}
+			\item \texttt{bnz rA, simm8}
+				\begin{itemize}
+				%--------
+				\item Relative branch if \texttt{rA} is \textit{non-zero}.
+				%--------
+				\end{itemize}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 1 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{1000 aaaa oooi iiii}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  general-purpose register \texttt{rA} or
+				special-purpose register \texttt{sA}
+			\item \texttt{o}:  opcode
+			\item \texttt{i}:  5-bit unsigned immediate \texttt{imm5} or
+				5-bit signed immediate \texttt{simm5}
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{sltui rA, imm5}
+			\item \texttt{sltsi rA, simm5}
+			\item \texttt{xorsi rA, simm5}
+			\item \texttt{xorsi sA, simm5}
+
+			\item \texttt{lsli rA, imm5}
+			\item \texttt{lsri rA, imm5}
+			\item \texttt{asri rA, imm5}
+			\item \textit{Reserved for future expansion.}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 2 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{1001 aaaa bbbb oooo}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  general-purpose register \texttt{rA}
+			\item \texttt{b}:  general-purpose register \texttt{rB}
+			\item \texttt{o}:  opcode
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{add rA, rB}
+			\item \texttt{sub rA, rB}
+			\item \texttt{sltu rA, rB}
+			\item \texttt{slts rA, rB}
+
+			\item \texttt{and rA, rB}
+			\item \texttt{orr rA, rB}
+			\item \texttt{xor rA, rB}
+			\item \texttt{lsl rA, rB}
+
+			\item \texttt{lsr rA, rB}
+			\item \texttt{asr rA, rB}
+			\item \texttt{mul rA, rB}
+			\item \texttt{udiv rA, rB}
+
+			\item \texttt{sdiv rA, rB}
+			\item \textit{add rA, rB, fp}
+			\item \textit{add rA, rB, sp}
+			\item \textit{add rA, rB, pc}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 3 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{1010 aaaa bbbb oooo}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  general-purpose register \texttt{rA} or
+				special-purpose register \texttt{sA}
+			\item \texttt{b}:  general-purpose register \texttt{rB} or
+				special-purpose register \texttt{sB}
+			\item \texttt{o}:  opcode
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{ldb rA, rB}
+			\item \texttt{ldsb rA, rB}
+			\item \texttt{stb rA, rB}
+			\item \texttt{ldh rA, rB}
+
+			\item \texttt{ldsh rA, rB}
+			\item \texttt{sth rA, rB}
+			\item \texttt{ldr rA, rB}
+			\item \texttt{str rA, rB}
+
+			\item \texttt{cpy rA, rB}
+				\begin{itemize}
+				%--------
+				\item Copy \texttt{rB} to \texttt{rA}
+				%--------
+				\end{itemize}
+
+			\item \texttt{cpy rA, sB}
+				\begin{itemize}
+				%--------
+				\item Copy \texttt{sB} to \texttt{rA}
+				%--------
+				\end{itemize}
+			\item \texttt{cpy sA, rB}
+				\begin{itemize}
+				%--------
+				\item Copy \texttt{rB} to \texttt{sA}
+				%--------
+				\end{itemize}
+			%\item \texttt{cpy sA, sB}
+			%	\begin{itemize}
+			%	%--------
+			%	\item Copy \texttt{sB} to \texttt{sA}
+			%	%--------
+			%	\end{itemize}
+
+			\item \texttt{reti}
+				\begin{itemize}
+				%--------
+				\item Return from an interrupt, enabling interrupts
+					(by setting the low bit of \texttt{ie} to \texttt{0b1})
+					and jumping to the program counter value at
+					\texttt{ira}.
+				%--------
+				\end{itemize}
+
+			\item \textit{zeb rA, rB}
+				\begin{itemize}
+				%--------
+				\item Zero extend the low 8 bits of \texttt{rB} and write
+					the result into \texttt{rA}.
+				%--------
+				\end{itemize}
+			\item \textit{zeh rA, rB}
+				\begin{itemize}
+				%--------
+				\item Zero extend the low 16 bits of \texttt{rB} and write
+					the result into \texttt{rA}.
+				%--------
+				\end{itemize}
+			\item \textit{seb rA, rB}
+				\begin{itemize}
+				%--------
+				\item Sign extend the low 8 bits of \texttt{rB} and write
+					the result into \texttt{rA}.
+				%--------
+				\end{itemize}
+			\item \textit{seh rA, rB}
+				\begin{itemize}
+				%--------
+				\item Sign extend the low 16 bits of \texttt{rB} and write
+					the result into \texttt{rA}.
+				%--------
+				\end{itemize}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
 
 	%\printbibliography[heading=bibnumbered,title={Bibliography}]
 
