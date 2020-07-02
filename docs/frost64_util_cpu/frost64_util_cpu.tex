@@ -102,7 +102,7 @@
 		\item \texttt{lr}: index \texttt{0xd}, link register
 		\item \texttt{fp}: index \texttt{0xe}, frame pointer
 		\item \texttt{sp}: index \texttt{0xf}, stack pointer (one for
-			interrupts mode, one for user mode)
+			supervisor mode, one for user mode)
 		%--------
 		\end{itemize}
 
@@ -118,16 +118,17 @@
 			\end{itemize}
 		\item \texttt{ira}: index \texttt{0x1}, interrupt return address
 		\item \texttt{ida}: index \texttt{0x2}, interrupt destination
-			address
-		\item \texttt{inp}: index \texttt{0x3}, interrupt pin (which
-			interrupt pin was asserted)
+			address, only writable by supervisor mode
+		\item \texttt{ipin}: index \texttt{0x3}, interrupt pin (which
+			interrupt pin was asserted), only writable by supervisor mode
 
-		\item \texttt{ie}: index \texttt{0x4}, interrupt enable
-		\item \texttt{usp}: index \texttt{0x5}, mirror of user-mode stack
+		\item \texttt{ie}: index \texttt{0x4}, interrupt enable, only
+			writable by supervisor mode
+		\item \texttt{usp}: index \texttt{0x5}, mirror of user mode stack
 			pointer
-		\item \texttt{isp}: index \texttt{0x6}, mirror of interrupts-mode
+		\item \texttt{isp}: index \texttt{0x6}, mirror of supervisor mode
 			stack pointer (writes to this register are ignored when in
-			user-mode)
+			user mode)
 		%--------
 		\end{itemize}
 	%--------
@@ -278,8 +279,20 @@
 
 			\item \texttt{sdiv rA, rB}
 			\item \texttt{add rA, rB, pc}
-			\item \textit{Reserved for future expansion.}
-			\item \textit{Reserved for future expansion.}
+			\item \textit{in rA, rB}
+				\begin{itemize}
+				%--------
+				\item Read 32-bit data from input port address in
+					\texttt{rB} and store it in \texttt{rA}
+				%--------
+				\end{itemize}
+			\item \textit{out rA, rB}
+				\begin{itemize}
+				%--------
+				\item Write 32-bit data from \texttt{rA} to output port
+					address in \texttt{rB}.
+				%--------
+				\end{itemize}
 			%--------
 			\end{enumerate}
 		%--------
