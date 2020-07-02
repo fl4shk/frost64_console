@@ -87,21 +87,22 @@
 		\begin{itemize}
 		%--------
 		\item \texttt{zero}: index \texttt{0x0}, always zero
-		\item \texttt{u0}: index \texttt{0x1}
-		\item \texttt{u1}: index \texttt{0x2}
-		\item \texttt{u2}: index \texttt{0x3}
-		\item \texttt{u3}: index \texttt{0x4}
-		\item \texttt{u4}: index \texttt{0x5}
-		\item \texttt{u5}: index \texttt{0x6}
-		\item \texttt{u6}: index \texttt{0x7}
-		\item \texttt{u7}: index \texttt{0x8}
-		\item \texttt{u8}: index \texttt{0x9}
-		\item \texttt{u9}: index \texttt{0xa}
-		\item \texttt{u10}: index \texttt{0xb}
-		\item \texttt{u11}: index \texttt{0xc}
+		\item \texttt{ua}: index \texttt{0x1}
+		\item \texttt{ub}: index \texttt{0x2}
+		\item \texttt{uc}: index \texttt{0x3}
+		\item \texttt{ud}: index \texttt{0x4}
+		\item \texttt{ue}: index \texttt{0x5}
+		\item \texttt{uf}: index \texttt{0x6}
+		\item \texttt{ug}: index \texttt{0x7}
+		\item \texttt{uh}: index \texttt{0x8}
+		\item \texttt{ui}: index \texttt{0x9}
+		\item \texttt{uj}: index \texttt{0xa}
+		\item \texttt{uk}: index \texttt{0xb}
+		\item \texttt{ul}: index \texttt{0xc}
 		\item \texttt{lr}: index \texttt{0xd}, link register
 		\item \texttt{fp}: index \texttt{0xe}, frame pointer
-		\item \texttt{sp}: index \texttt{0xf}, stack pointer
+		\item \texttt{sp}: index \texttt{0xf}, stack pointer (one for
+			interrupts mode, one for user mode)
 		%--------
 		\end{itemize}
 
@@ -120,7 +121,13 @@
 			address
 		\item \texttt{inp}: index \texttt{0x3}, interrupt pin (which
 			interrupt pin was asserted)
+
 		\item \texttt{ie}: index \texttt{0x4}, interrupt enable
+		\item \texttt{usp}: index \texttt{0x5}, mirror of user-mode stack
+			pointer
+		\item \texttt{isp}: index \texttt{0x6}, mirror of interrupts-mode
+			stack pointer (writes to this register are ignored when in
+			user-mode)
 		%--------
 		\end{itemize}
 	%--------
@@ -130,30 +137,51 @@
 	\subsection{Group 0 Instructions}
 		\begin{itemize}
 		%--------
-		\item Encoding:  \texttt{0ooo aaaa iiii iiii}
+		\item Encoding (non-\texttt{pre}):  \texttt{0ooo aaaa iiii iiii}
 			\begin{itemize}
 			%--------
-			\item \texttt{o}:  opcode
+			\item \texttt{o}:  opcode (non-\texttt{0b000})
 			\item \texttt{a}:  general-purpose register \texttt{rA}
 			\item \texttt{i}:  8-bit unsigned immediate \texttt{imm8} or
 				8-bit signed immediate \texttt{simm8}
 			%--------
 			\end{itemize}
+		\item Encoding (\texttt{pre}):  \texttt{0000 iiii iiii iiii}
+			\begin{itemize}
+			%--------
+			\item \texttt{i}:  12-bit partial immediate, \texttt{imm12}
+			%--------
+			\end{itemize}
 		\item Instruction List:
 			\begin{enumerate}
 			%--------
+			\item \texttt{pre imm12}
+				\begin{itemize}
+				%--------
+				\item This instruction sets the immediate value of the
+					following instruction to
+					\texttt{{imm12 << 12} | next\_instr\_immediate}.
+				\item Multiples of this instruction can be chained together
+					to create even larger immediates.
+				\item For instructions that use a sign-extended immediate,
+					the final immediate will be sign extended starting from
+					whatever the most significant bit of the final
+					immediate is.  For example,
+					\texttt{pre imm12; addsi rA, simm8}
+					will sign extend the 20-bit value,
+					\texttt{(imm12 << 12) | simm8}, to 32-bit before
+					performing the operation.
+				\item This instruction, while in effect, cannot be
+					interrupted.
+				\item When an instruction that doesn't use an immediate
+					follows this one, \texttt{pre} acts as a nop.
+				%--------
+				\end{itemize}
 			\item \texttt{cpyi rA, imm8}
 				\begin{itemize}
 				%--------
 				\item This instruction sets \texttt{rA} to the immediate
 					value.
-				%--------
-				\end{itemize}
-			\item \texttt{shiftin rA, imm8}
-				\begin{itemize}
-				%--------
-				\item This instruction sets \texttt{rA} to
-					\texttt{(rA << 8) | imm8}
 				%--------
 				\end{itemize}
 			\item \texttt{addsi rA, simm8}
@@ -167,12 +195,6 @@
 
 			\item \texttt{sltsi rA, simm8}
 			\item \texttt{addsi rA, pc, simm8}
-				\begin{itemize}
-				%--------
-				\item This instruction writes \texttt{pc + to\_s32(imm8)}
-					into \texttt{rA}
-				%--------
-				\end{itemize}
 
 			\item \texttt{bz rA, simm8}
 				\begin{itemize}
@@ -211,14 +233,14 @@
 		\item Instruction List:
 			\begin{enumerate}
 			%--------
+			\item \texttt{andi rA, imm5}
+			\item \texttt{ori rA, imm5}
 			\item \texttt{xorsi rA, simm5}
 			\item \texttt{xorsi sA, simm5}
+
 			\item \texttt{lsli rA, imm5}
 			\item \texttt{lsri rA, imm5}
-
 			\item \texttt{asri rA, imm5}
-			\item \textit{Reserved for future expansion.}
-			\item \textit{Reserved for future expansion.}
 			\item \textit{Reserved for future expansion.}
 			%--------
 			\end{enumerate}
@@ -245,7 +267,7 @@
 			\item \texttt{slts rA, rB}
 
 			\item \texttt{and rA, rB}
-			\item \texttt{orr rA, rB}
+			\item \texttt{or rA, rB}
 			\item \texttt{xor rA, rB}
 			\item \texttt{lsl rA, rB}
 
@@ -255,9 +277,9 @@
 			\item \texttt{udiv rA, rB}
 
 			\item \texttt{sdiv rA, rB}
-			\item \textit{add rA, rB, fp}
-			\item \textit{add rA, rB, sp}
-			\item \textit{add rA, rB, pc}
+			\item \texttt{add rA, rB, pc}
+			\item \textit{Reserved for future expansion.}
+			\item \textit{Reserved for future expansion.}
 			%--------
 			\end{enumerate}
 		%--------
@@ -289,12 +311,12 @@
 			\item \textit{ldr sA, [rB, sp]}
 			\item \texttt{str sA, [rB, sp]}
 
-			\item \texttt{cpy rA, rB}
-				\begin{itemize}
-				%--------
-				\item Copy \texttt{rB} to \texttt{rA}
-				%--------
-				\end{itemize}
+			%\item \texttt{cpy rA, rB}
+			%	\begin{itemize}
+			%	%--------
+			%	\item Copy \texttt{rB} to \texttt{rA}
+			%	%--------
+			%	\end{itemize}
 
 			\item \texttt{cpy rA, sB}
 				\begin{itemize}
@@ -308,12 +330,12 @@
 				\item Copy \texttt{rB} to \texttt{sA}
 				%--------
 				\end{itemize}
-			%\item \texttt{cpy sA, sB}
-			%	\begin{itemize}
-			%	%--------
-			%	\item Copy \texttt{sB} to \texttt{sA}
-			%	%--------
-			%	\end{itemize}
+			\item \texttt{cpy sA, sB}
+				\begin{itemize}
+				%--------
+				\item Copy \texttt{sB} to \texttt{sA}
+				%--------
+				\end{itemize}
 
 			\item \texttt{reti}
 				\begin{itemize}
