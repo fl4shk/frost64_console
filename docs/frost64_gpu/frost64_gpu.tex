@@ -1,0 +1,528 @@
+\documentclass{article}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{fancyvrb}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{setspace}
+\usepackage[nottoc]{tocbibind}
+\usepackage[font=large]{caption}
+\usepackage{framed}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{fontspec}
+\usepackage[backend=biber,sorting=none]{biblatex}
+%%\usepackage[
+%%	backend=biber,
+%%	style=ieee,
+%%	sorting=none
+%%]{biblatex}
+%\addbibresource{project_refs.bib}
+
+%% Hide section, subsection, and subsubsection numbering
+%\renewcommand{\thesection}{}
+%\renewcommand{\thesubsection}{}
+%\renewcommand{\thesubsubsection}{}
+
+%% Alternative form of doing section stuff
+%\renewcommand{\thesection}{}
+%\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+%\makeatletter
+%\def\@seccntformat#1{\csname #1ignore\expandafter\endcsname\csname the#1\endcsname\quad}
+%\let\sectionignore\@gobbletwo
+%\let\latex@numberline\numberline
+%\def\numberline#1{\if\relax#1\relax\else\latex@numberline{#1}\fi}
+%\makeatother
+%
+%\makeatletter
+%\renewcommand\tableofcontents{%
+%    \@starttoc{toc}%
+%}
+%\makeatother
+
+\newcommand{\respacing}{\doublespacing \singlespacing}
+\newcommand{\code}[2][1]{\noindent \texttt{\tab[#1] #2} \\}
+\newcommand{\skipline}[0]{\texttt{}\\}
+\newcommand{\tnl}[0]{\tabularnewline}
+
+\begin{document}
+%--------
+	\font\titlefont={Times New Roman} at 20pt
+	\title{{\titlefont Frost64 GPU}}
+
+	\font\bottomtextfont={Times New Roman} at 12pt
+	\date{{\bottomtextfont} \today}
+	\author{{\bottomtextfont Andrew Clark}}
+
+	\setmainfont{Times New Roman}
+	\setmonofont{Courier New}
+
+	\maketitle
+	\pagenumbering{gobble}
+
+	\newpage
+	\pagenumbering{arabic}
+	%\tableofcontents
+	%\newpage
+
+	%\doublespacing
+
+%\section{Abstract}
+	%\setcounter{section}{-1}
+
+\section{Table of Contents}
+	\tableofcontents
+	\newpage
+
+\section{Registers, Main Widths, etc.}
+	\begin{itemize}
+	%--------
+	\item The main width of the processor, hinted at with the name, is
+		64-bit.  Addresses are 64-bit, and some instructions only support
+		64-bit operations.
+	\item Instructions LARs (ILARs)
+		\begin{itemize}
+		%--------
+		\item There are 128 total ILARs, with 64 of them used for
+			supervisor mode and 64 of them used for user mode.
+		\item The two ILARs named \texttt{i0}, which are ILAR number 0 and
+			ILAR number 64 within the ILAR file, have their fields always
+			set to zero.  They cannot be changed.
+		\item ILARs are 256 bytes long, and instructions are 32-bit.  This
+			means that one ILAR holds 256 / 4 = 64 instructions.
+		\item Note that supervisor mode ILARs are neither readable nor
+			writable in user mode.
+		%--------
+		\end{itemize}
+	\item Data LARs (DLARs)
+		\begin{itemize}
+		%--------
+		\item There are 128 total DLARs, with 64 used for supervisor mode
+			and 64 of them used for user mode.
+		\item The two DLARs named \texttt{dzero}, which are DLAR number 0
+			and DLAR number 128 within the DLAR file, have their fields
+			always set to zero.  They cannot be changed.
+		\item The supervisor mode DLAR named \texttt{dira}, which is DLAR
+			126 within the DLAR file (index \texttt{64} when in supervisor
+			mode), is treated specially, as its scalar data field is the
+			interrupt return address for the \texttt{reti} instruction.
+		\item The supervisor mode DLAR named \texttt{dida}, which is DLAR
+			127 within the DLAR file (index \texttt{65} when in supervisor
+			mode), is used as the interrupt vector.
+		\item DLARs are 256 bytes long.
+		\item DLARs can take on the following type tags (3-bit enum):
+			\begin{itemize}
+			%--------
+			\item 8-bit, unsigned
+			\item 8-bit, signed
+			\item 16-bit, unsigned
+			\item 16-bit, signed
+			\item 32-bit, unsigned
+			\item 32-bit, signed
+			\item 64-bit, unsigned
+			\item 64-bit, signed
+			%--------
+			\end{itemize}
+		\item The base address of a DLAR is 64 - 8 = 56 bits long.
+		\item The scalar offset of a DLAR is 8 bits long.
+		%--------
+		\end{itemize}
+	\item Program Counter (PC)
+		\begin{itemize}
+		%--------
+		\item The program counter consists of an ILAR number (6-bit) and an
+			offset into said ILAR (6-bit).
+		\item Two program counters exist:  one for supervisor mode, and one
+			for user mode.
+		%--------
+		\end{itemize}
+	\item Interrupt Enable (\texttt{ie})
+		\begin{itemize}
+		%--------
+		\item This 1-bit register indicates whether or not an interrupt can
+			be serviced.  It can only be written to in supervisor mode, and
+			it cannot be read at all.
+		%--------
+		\end{itemize}
+	%--------
+	\end{itemize}
+
+%\newpage
+%\section{Encoding Functional Unit Numbers Into Arithmetic/Logic
+%	Instructions}
+%
+%	Here is an explanation of what encoding functional unit numbers into
+%	arithmetic/logic instructions means to the CPU.
+%
+%	"This instruction, which takes multiple cycles to complete, uses this
+%	functional unit.  You may execute later instructions that don't depend
+%	on the results that this functional unit will produce at the same time
+%	as this instruction.  If a later instruction needs the results of this
+%	functional unit, please stall, as necessary, until the functional unit
+%	has produced its results."
+%
+%	In other words, said instructions start an asynchronous use of the
+%	functional unit, stalling only if necessary, i.e. when a needed result
+%	isn't computed yet.
+%
+%	Different implementations of the CPU may have a different number of
+%	functional units, with the machine still executing instructions
+%	correctly, even if it has fewer functional units than what was encoded
+%	into the instruction.  Four bits in relevant instructions are used to
+%	indicate which functional unit to use for said instructions.
+
+\newpage
+\section{Exceptions}
+	Some instructions may cause an exception to occur, putting the
+	processor in supervisor mode.
+
+	The following exceptions may occur during normal execution of a
+	program.
+
+	\begin{itemize}
+	%--------
+	\item Division by zero.
+	\item \texttt{swi}.
+		\begin{itemize}
+		%--------
+		\item Note that this instruction always causes an exception to
+			occur.
+		%--------
+		\end{itemize}
+	\item \texttt{reti} in user mode.
+	\item \texttt{ei} in user mode.
+	\item \texttt{di} in user mode.
+	%--------
+	\end{itemize}
+
+\newpage
+\section{Instructions (CPU's perspective)}
+	\subsection{Group 0 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{0000 aaaa aabb bbbb  cccc cc00 000v oooo}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  DLAR a
+			\item \texttt{b}:  DLAR b
+			\item \texttt{c}:  DLAR c
+			\item \texttt{v}:
+				\begin{itemize}
+				%--------
+				\item when \texttt{0}:  scalar operation
+				\item when \texttt{1}:  vector operation
+				%--------
+				\end{itemize}
+			\item \texttt{o}:  opcode
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{add dA, dB, dC}
+			\item \texttt{sub dA, dB, dC}
+			\item \texttt{slt dA, dB, dC}
+				\begin{itemize}
+				%--------
+				\item Perform an unsigned set less than if \texttt{dB} is
+					unsigned, but perform a signed set less than if
+					\texttt{dB} is signed.
+				%--------
+				\end{itemize}
+			\item \texttt{mul dA, dB, dC}
+
+
+			\item \texttt{div dA, dB, dC}
+				\begin{itemize}
+				%--------
+				\item Perform an unsigned divide if \texttt{dB} is
+					unsigned, but perform a signed divide if \texttt{dB} is
+					signed.  This instruction causes an exception if
+					division by zero is attempted.
+				%--------
+				\end{itemize}
+			\item \texttt{and dA, dB, dC}
+			\item \texttt{orr dA, dB, dC}
+			\item \texttt{xor dA, dB, dC}
+
+
+			\item \texttt{shl dA, dB, dC}
+				\begin{itemize}
+				%--------
+				\item Logical shift left
+				%--------
+				\end{itemize}
+			\item \texttt{shr dA, dB, dC}
+				\begin{itemize}
+				%--------
+				\item Logical shift right if \texttt{dB} is unsigned, but
+					arithmetic shift right if \texttt{dB} is signed.
+				%--------
+				\end{itemize}
+			\item \texttt{rol dA, dB, dC}
+			\item \texttt{ror dA, dB, dC}
+
+
+			\item \textit{Reserved for future expansion.}
+			\item \textit{Reserved for future expansion.}
+			\item \textit{Reserved for future expansion.}
+			\item \textit{Reserved for future expansion.}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 1 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{0001 aaaa aabb bbbb  iiii iiii iiii oooo}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  DLAR a
+			\item \texttt{b}:  DLAR b
+			%\item \texttt{c}:  DLAR c
+			\item \texttt{i}:  signed 12-bit immediate, \texttt{simm12}
+			\item \texttt{o}:  opcode
+			%--------
+			\end{itemize}
+		\item Notes:
+			These instructions compute the address to load from or store to
+			via the formula \texttt{dB.scalar\_data + to\_s64(simm12)}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{ldu8 dA, [dB, simm12]}
+			\item \texttt{lds8 dA, [dB, simm12]}
+			\item \texttt{ldu16 dA, [dB, simm12]}
+			\item \texttt{lds16 dA, [dB, simm12]}
+
+			\item \texttt{ldu32 dA, [dB, simm12]}
+			\item \texttt{lds32 dA, [dB, simm12]}
+			\item \texttt{ldu64 dA, [dB, simm12]}
+			\item \texttt{lds64 dA, [dB, simm12]}
+
+			\item \texttt{stu8 dA, [dB, simm12]}
+			\item \texttt{sts8 dA, [dB, simm12]}
+			\item \texttt{stu16 dA, [dB, simm12]}
+			\item \texttt{sts16 dA, [dB, simm12]}
+
+			\item \texttt{stu32 dA, [dB, simm12]}
+			\item \texttt{sts32 dA, [dB, simm12]}
+			\item \texttt{stu64 dA, [dB, simm12]}
+			\item \texttt{sts64 dA, [dB, simm12]}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 2 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{0010 aaaa aabb bbbb  cccc ccii iiii oooo}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  DLAR a
+			\item \texttt{b}:  DLAR b
+			\item \texttt{c}:  DLAR c
+			\item \texttt{i}:  signed 6-bit immediate, \texttt{simm6}
+			\item \texttt{o}:  opcode
+			%--------
+			\end{itemize}
+		\item Notes:
+			These instructions compute the address to load from or store to
+			via the formula
+			\texttt{dB.scalar\_data + dC.addr + to\_s64(simm12)}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{ldau8 dA, [dB, dC, simm6]}
+			\item \texttt{ldas8 dA, [dB, dC, simm6]}
+			\item \texttt{ldau16 dA, [dB, dC, simm6]}
+			\item \texttt{ldas16 dA, [dB, dC, simm6]}
+
+			\item \texttt{ldau32 dA, [dB, dC, simm6]}
+			\item \texttt{ldas32 dA, [dB, dC, simm6]}
+			\item \texttt{ldau64 dA, [dB, dC, simm6]}
+			\item \texttt{ldas64 dA, [dB, dC, simm6]}
+
+			\item \texttt{stau8 dA, [dB, dC, simm6]}
+			\item \texttt{stas8 dA, [dB, dC, simm6]}
+			\item \texttt{stau16 dA, [dB, dC, simm6]}
+			\item \texttt{stas16 dA, [dB, dC, simm6]}
+
+			\item \texttt{stau32 dA, [dB, dC, simm6]}
+			\item \texttt{stas32 dA, [dB, dC, simm6]}
+			\item \texttt{stau64 dA, [dB, dC, simm6]}
+			\item \texttt{stas64 dA, [dB, dC, simm6]}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 3 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{0011 aaaa aabb bbbb  cccc ccii iiii jjjj}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  ILAR a
+			\item \texttt{b}:  DLAR b
+			\item \texttt{c}:  ILAR c
+			\item \texttt{i}:  signed 6-bit immediate, \texttt{isimm6}
+			\item \texttt{j}:  unsigned 4-bit immediate, \texttt{jimm4}
+			%--------
+			\end{itemize}
+		\item Notes:
+			\begin{itemize}
+			%--------
+			\item This instruction computes the base address to fetch from 
+				via the formula
+				\texttt{dB.scalar\_data + iC.addr + to\_s64(isimm6)}
+			\item This instruction fetches into up to \texttt{jimm4}
+				consecutive ILARs, starting with \texttt{iA}, allowing a
+				maximum 17 ILARs to be fetched into with one instruction.
+			\item This instruction makes use of the associativity of LARs
+				and will only actually access memory if it has to.
+			%--------
+			\end{itemize}
+			
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+			\item \texttt{fetch iA, [dB, iC, isimm6], jimm4}
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+	\subsection{Group 4 Instructions}
+		\begin{itemize}
+		%--------
+		\item Encoding:  \texttt{0100 aaaa aabb bbbb  cccc ccii iiii oooo}
+			\begin{itemize}
+			%--------
+			\item \texttt{a}:  DLAR a
+			\item \texttt{b}:  DLAR b or ILAR b
+			\item \texttt{c}:  ILAR c or unsigned 6-bit immediate,
+				\texttt{cimm6}
+			\item \texttt{i}:  unsigned 6-bit immediate, \texttt{iimm6},
+				or signed 6-bit immediate, \texttt{isimm6}
+			%--------
+			\end{itemize}
+		\item Instruction List:
+			\begin{enumerate}
+			%--------
+
+			%--------
+			\item \texttt{sel.s dA, iB, iC, isimm6}
+				\begin{itemize}
+				%--------
+				\item This instruction jumps to \texttt{iB}, offset
+					\texttt{imm6}, if \texttt{dA.scalar\_data} is zero or
+					\texttt{iC}, offset \texttt{imm6} if
+					\texttt{dA.scalar\_data} is non-zero.
+				%--------
+				\end{itemize}
+			\item \texttt{sel.v dA, iB, iC, isimm6}
+				\begin{itemize}
+				%--------
+				\item This instruction jumps to \texttt{iB}, offset
+					\texttt{imm6}, if \texttt{dA.data} is zero or
+					\texttt{iC}, offset \texttt{imm6} if
+					\texttt{dA.data} is non-zero.
+				%--------
+				\end{itemize}
+			\item \texttt{bz.s dA, iB, isimm6}
+			\item \texttt{bz.v dA, iB, isimm6}
+			%--------
+
+			%--------
+			\item \texttt{bnz.s dA, iB, isimm6}
+			\item \texttt{bnz.v dA, iB, isimm6}
+			\item \texttt{in.s dA, dB, cimm6, iimm6}
+				\begin{itemize}
+				%--------
+				\item Input scalar data into \texttt{dA} from IO address in
+					\texttt{dB.scalar\_data + cat(cimm6, iimm6)}.
+				\item The size of the IO access is determined by
+					\texttt{dA.type}.
+				%--------
+				\end{itemize}
+			\item \texttt{in.v, dA, dB, cimm6, iimm6}
+				\begin{itemize}
+				%--------
+				\item Input vector data into \texttt{dA} from IO address in
+					\texttt{dB.scalar\_data + cat(cimm6, iimm6)}.
+				%--------
+				\end{itemize}
+			%--------
+
+			%--------
+			\item \texttt{out.s dA, dB, cimm6, iimm6}
+				\begin{itemize}
+				%--------
+				\item Output scalar data in \texttt{dA} to IO address in
+					\texttt{dB.scalar\_data + cat(cimm6, iimm6)}.
+				\item The size of the IO access is determined by
+					\texttt{dA.type}.
+				%--------
+				\end{itemize}
+			\item \texttt{out.v, dA, dB, cimm6, iimm6}
+				\begin{itemize}
+				%--------
+				\item Output vector data in \texttt{dA} to IO address in
+					\texttt{dB.scalar\_data + cat(cimm6, iimm6)}.
+				%--------
+				\end{itemize}
+			\item \texttt{swi dA, cimm6, iimm6}
+				\begin{itemize}
+				%--------
+				\item Perform software interrupt, where the interrupt
+					number is stored in
+					\texttt{dA.scalar\_data + cat(cimm6, iimm6)}
+				\item This instruction, like a regular interrupt, stores
+					the interrupt return address in \texttt{dira}, which is
+					a supervisor mode DLAR.
+				%--------
+				\end{itemize}
+			\item \texttt{reti}
+				\begin{itemize}
+				%--------
+				\item Switch from supervisor mode to user mode.  This
+					instruction will cause an exception if executed in user
+					mode. 
+				%--------
+				\end{itemize}
+			%--------
+
+			%--------
+			\item \texttt{ei}
+				\begin{itemize}
+				%--------
+				\item Enable interrupts.  This instruction causes an
+					exception if executed in user mode.
+				%--------
+				\end{itemize}
+			\item \texttt{di}
+				\begin{itemize}
+				%--------
+				\item Disable interrupts.  This instruction causes an
+					exception if executed in user mode.
+				%--------
+				\end{itemize}
+			\item \textit{Reserved for future expansion}
+			\item \texttt{Reserved for future expansion.}
+			%--------
+
+			%--------
+			\end{enumerate}
+		%--------
+		\end{itemize}
+
+
+	%\printbibliography[heading=bibnumbered,title={Bibliography}]
+
+%--------
+\end{document}
